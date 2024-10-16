@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+	  <html lang="en">
+	  <head>
+		  <meta charset="UTF-8">
+		  <title>Satellite Tracker</title>
+		  <script src="https://cesium.com/downloads/cesiumjs/releases/1.84/Build/Cesium/Cesium.js"></script>
+		  <style>
+			  @import url('https://cesium.com/downloads/cesiumjs/releases/1.84/Build/Cesium/Widgets/widgets.css');
+			  #cesiumContainer {
+				  width: 100%;
+				  height: 100%;
+				  margin: 0;
+				  padding: 0;
+				  overflow: hidden;
+			  }
+		  </style>
+	  </head>
+	  <body>
+	  <div id="cesiumContainer"></div>
+
+	  <script>
+		  Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjk0N2E1Yi0yZGQxLTQyYTktODJiYy0zZWY1ZmM2YTZjNzEiLCJpZCI6MTc4NjExLCJpYXQiOjE3MDAwODM0NTl9.b3D9VpouintTPZ3nnToXiNjNxStwdEvRMtzcsS-I4aI';
+		  const viewer = new Cesium.Viewer("cesiumContainer");
+		
+  		  const toDegrees = Cesium.Math.toDegrees;
+		  window.onload = () => {
+			// document.getElementsByClassName('cesium-viewer-animationContainer')[0].replaceChildren("");
+			// document.getElementsByClassName('cesium-timeline-main')[0].replaceChildren("");
+			viewer.animation.container.style.visibility = 'hidden';
+			viewer.timeline.container.style.visibility = 'hidden';
+			viewer.forceResize();
+		  }
+		

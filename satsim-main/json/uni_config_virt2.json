@@ -1,0 +1,14 @@
+{
+    "name" : "",
+    "rgb" : false,
+    "hyperspectral" : true,
+    "radar" : false,
+    "CPU" : 20,
+    "memory" : 20,
+    "storage" : 2,
+    "GPU" : false,
+    "FPGA" : false,
+    "ISL_capcity" : 5,
+    "GSL_capacity" : 0,
+    "range" : 0
+}
