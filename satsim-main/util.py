@@ -22,21 +22,15 @@ def generate_sat_obj_list(
 		eccentricity,
 		arg_perigee,
 		mean_motion
-		#altitude
 ):
-	"""
-	Generates list of satellite objects based on orbital elements
-	:param num_orbit: Number of orbits
-	:param num_sats_per_orbit: Number of satellites per orbit
-	:param epoch: Epoch (start time)
-	:param phase_diff: Phase difference between adjacent orbits
-	:param inclination: Angle of inclination
-	:param eccentricity: Eccentricity of orbits
-	:param arg_perigee: Argument of perigee of orbits
-	:param mean_motion: Mean motion in revolutions per day
-	:param altitude: Altitude in metres
-	:return: List of satellite objects
-	"""
+	
+	'''
+	Generates list of satellite objects based on orbital parameters. 
+	
+	Returns:
+		List: List of satellite objects
+ 	'''
+	
 	sat_objs = [None] * (num_orbit * num_sats_per_orbit)
 	counter = 0
 	for orb in range(0, num_orbit):
@@ -74,9 +68,13 @@ def generate_sat_obj_wrapper_list(
 	eccentricity,
 	arg_perigee,
 	mean_motion
-	#altitude
 ):
+	"""
+	Generates list of satellite objects based on orbital parameters. 
 	
+	Returns:
+		List: List of satellite objects
+	"""
 	sat_objs = [None] * (num_orbit * num_sats_per_orbit)
 	counter = 0
 	for orb in range(0, num_orbit):
@@ -109,6 +107,18 @@ def generate_sat_obj_wrapper_list(
 
 
 def write_viz_files(viz_string, top_file, bottom_file, out_file):
+	"""
+	Writes a visualization HTML string to a HTML file by combining content from the top, bottom, and a generated visualization string.
+	
+	Args:
+		viz_string (str): The string containing the visualization content.
+		top_file (str): Filepath to the top part of the HTML template.
+		bottom_file (str): Filepath to the bottom part of the HTML template.
+		out_file (str): Output file to write the final combined content.
+	
+	Returns:
+		None
+	"""
 	writer_html = open(out_file, 'w')
 	with open(top_file, 'r') as fi:
 		writer_html.write(fi.read())
@@ -121,7 +131,19 @@ def write_viz_files(viz_string, top_file, bottom_file, out_file):
 
 
 def distance_m_between_satellites(sat1, sat2, epoch_str, date_str):
-	# Create an observer somewhere on the planet
+	"""
+	Calculates the distance two satellites at a specific epoch and date.
+	
+	Args:
+		sat1 (ephem.EarthSatellite): The first satellite object.
+		sat2 (ephem.EarthSatellite): The second satellite object.
+		epoch_str (str): The epoch time string (in TLE format).
+		date_str (str): The observation date string (in ephem date format).
+	
+	Returns:
+		float: The distance between the two satellites.
+	"""
+	# Create an observer on the planet
 	observer = ephem.Observer()
 	observer.epoch = epoch_str
 	observer.date = date_str
@@ -140,6 +162,15 @@ def distance_m_between_satellites(sat1, sat2, epoch_str, date_str):
 
 
 def read_tles(filename_tles):
+	"""
+	Reads a TLE file and extracts satellite information.
+	
+	Args:
+		filename_tles (str): Path to the file containing TLE data.
+	
+	Returns:
+		List[dict]: A list of dictionaries, each satellite object the satellite's name.
+	"""
 	satellites = []
 	with open(filename_tles, 'r') as f:
 
@@ -154,7 +185,7 @@ def read_tles(filename_tles):
 			epoch = Time("20" + epoch_year + "-01-01 00:00:00", scale="tdb") + (epoch_day - 1) * u.day
 
 
-			# Finally, store the satellite information
+			# Store the satellite information
 			satellites.append({
 				'sat_obj':ephem.readtle(tles_line_1, tles_line_2, tles_line_3), 
 				'name' : name
@@ -162,12 +193,20 @@ def read_tles(filename_tles):
 	return satellites
 
 def read_json(json_filenames):
+	"""
+	Reads satellite configuration data from JSON files.
+	
+	Args:
+		json_filenames (List[str]): List of JSON file paths.
+	
+	Returns:
+		List[dict]: A list of satellite configurations.
+	"""
 	sat_config = []
 	for json_path in json_filenames:
 		with open(json_path, "r") as file:
 			json_data = file.read()
 			sat_config.extend(json.loads(json_data))
-	# print(sat_config)
 	return sat_config
 
 def sat_setup(sat_dict, cur_sat):
@@ -186,6 +225,15 @@ def sat_setup(sat_dict, cur_sat):
 
 
 def const_setup(tles_files):
+	"""
+	Sets up the satellite constellation based on TLE (Two-Line Element) files.
+	
+	Parameters:
+	tles_files (list): A list of file paths to TLE files, each TLE file represent a constellation. 
+	
+	Returns:
+	tuple: A tuple containing a list of dictionary of satellite objects, name, and constellation ID,  and the number of constellations.
+	"""
 	satellites = []
 	cid = 0
 	for each in tles_files:
@@ -208,6 +256,16 @@ def const_setup(tles_files):
 
 
 def const_setup_per_sat_config(tles_file, json_file):
+	"""
+	Sets up a satellite constellation based on TLE and per-satellite configuration files.
+	
+	Parameters:
+	tles_file (list): A list of TLE file paths, each TLE file represent a constellation. 
+	json_file (str): Path to the JSON file containing per-satellite configuration.
+	
+	Returns:
+	tuple: A tuple containing a list of dictionary of satellite objects, name, and constellation ID,  and the number of constellations.
+	"""
 	satellites = []
 	cid = 0
 	sat_config = read_json(json_file) # util.read_json("test.json")
@@ -234,6 +292,16 @@ def const_setup_per_sat_config(tles_file, json_file):
 
 
 def const_setup_universal_config(tles_file, json_file):
+	"""
+	Sets up a satellite constellation based on TLE files and a universal satellite configuration.
+	
+	Parameters:
+	tles_file (list): A list of TLE file paths, each TLE file represent a constellation. 
+	json_file (str): A list of JSON file paths containing universal satellite configurations.
+	
+	Returns:
+	tuple: A tuple containing a list of dictionary of satellite objects, name, and constellation ID,  and the number of constellations.
+	"""
 	satellites = []
 	cid = 0
 	with open(json_file[cid], 'r') as file:
@@ -261,6 +329,15 @@ def const_setup_universal_config(tles_file, json_file):
 
 
 def satellite_ephem_to_str(satellite_ephem):
+	"""
+	Converts a satellite ephem object to its string representation.
+	
+	Parameters:
+	satellite_ephem (object): A satellite ephem object containing various satellite properties.
+	
+	Returns:
+	str: A formatted string representation of the satellite's ephem data.
+	"""
 	res = "EphemSatellite {\n"
 	res += "  name = \"" + str(satellite_ephem.name) + "\",\n"
 	res += "  _ap = " + str(satellite_ephem._ap) + ",\n"
@@ -285,5 +362,4 @@ def generate_100_coordinates_around_europe():
 	for _ in range(100):
 		coordinate = (random.uniform(34, 81), random.uniform(31, 69))
 		coordinates.append(coordinate)
-		# print(coordinate)
 	return coordinates
