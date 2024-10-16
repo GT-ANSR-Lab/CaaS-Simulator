@@ -1,6 +1,3 @@
-# wrapper object around ephem s.th. this can be used in the code provided by hypatia
-# (instead of a list of ephems we can use a list of our satellites)
-
 import ephem
 
 class Satellite:
