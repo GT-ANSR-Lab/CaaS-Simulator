@@ -153,18 +153,18 @@ def wrapper_visualize(data, assignment):
 # based on a set of constraints and an optimization objective.
 def solve_sat_wrapper(data, virtual_tles, physical_tles):
 	'''
-    Solves the satellite assignment problem by assigning virtual satellites to physical satellites
-    based on a set of constraints and an optimization objective.
-
-    Args:
-        data (dict): Contains information about the virtual and physical satellites, including their configurations 
-                     and any necessary preprocessed data (like position, constraints, etc.).
-        virtual_tles (list): Two-Line Element (TLE) data for virtual satellites, used to generate their orbits.
-        physical_tles (list): TLE data for physical satellites, used to generate their orbits.
-
-    Returns:
-        str: A visualization string that shows the assignment results and satellite orbits in CZML format
-             for use with Cesium.
+	Solves the satellite assignment problem by assigning virtual satellites to physical satellites
+	based on a set of constraints and an optimization objective.
+	
+	Args:
+		data (dict): Contains information about the virtual and physical satellites, including their configurations 
+			     and any necessary preprocessed data (like position, constraints, etc.).
+		virtual_tles (list): Two-Line Element (TLE) data for virtual satellites, used to generate their orbits.
+		physical_tles (list): TLE data for physical satellites, used to generate their orbits.
+	
+	Returns:
+		str: A visualization string that shows the assignment results and satellite orbits in CZML format
+		     for use with Cesium.
 	'''
 	solver = pywraplp.Solver.CreateSolver("SCIP")
 	x = satsim_solver.solve_sat_wrapper_helper(data, solver) # x[i, j] = 1 if item i is packed in bin j.
