@@ -1,6 +1,6 @@
 import ephem
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 import json
 from geopy.distance import great_circle
@@ -8,33 +8,73 @@ from astropy.time import Time
 from astropy import units as u
 from ortools.linear_solver import pywraplp
 import random
+import json
 try:
-	from . import satellite
-	from . import util
-	from . import orbit
 	from . import satsim_solver
+	from . import satellite_czml
 except (ImportError, SystemError):
-	import satellite
-	import util
-	import orbit
 	import satsim_solver
+	from satellite_czml import satellite_czml
 
 
-RADIUS = 10000000
+def load_config(file_path):
+    with open(file_path, 'r') as config_file:
+        config = json.load(config_file)
+    return config
+
+config = load_config("json/sim_config.json")
+
+SATELLITE_RADIUS = config["SATELLITE_RADIUS"]
+MARKER_RADIUS = config["MARKER_RADIUS"]
+MARKER_ELEVATION = config["MARKER_ELEVATION"]
+COLOR_LIST = config["COLOR_LIST"]
 
 
-PHASE_DIFF = True
+class Satellite:
+	"""
+	A class representing a satellite with its orbital parameters and capabilities.
 
-VIRTUAL_RADIUS = 200000.0
-# PHYSICAL_RADIUS = 500000.0
-MARKER_RADIUS = 50000.0
-MARKER_ELEVATION = 200000
+	This class serves as a wrapper around the ephem.EarthSatellite object, and 
+	provides attributes to store satellite-specific information and methods to read 
+	TLE data and compute orbital positions.
+	"""
 
-COLOR_LIST = [
-	"AQUA", "BROWN", "CHARTREUSE", "CORAL",
-	"DEEPPINK", "FIREBRICK", "GHOSTWHITE", "GOLD", "GOLDENROD", "GREEN",
-	"LAVENDER"
-]
+	def __init__(self, ephem_satellite: ephem.EarthSatellite): 
+		if ephem_satellite:
+			self.ephem_sat = ephem_satellite
+		self.name = ""
+		self.rgb = False
+		self.hyperspectral = False
+		self.radar = False
+		self.CPU = 0
+		self.memory = 0
+		self.storage = 0
+		self.GPU = False
+		self.FPGA = False
+		self.ISL_capcity = 0
+		self.GSL_capacity = 0
+		self.range = 0
+
+
+	def readtle(self, tle_title, tle_1, tle_2):
+		self.__init__(ephem.readtle(tle_title, tle_1, tle_2))
+		return self.ephem_sat
+
+
+	def compute(self, date_or_observer):
+		self.ephem_sat.compute(date_or_observer)
+
+	@property
+	def sublong(self):
+		return self.ephem_sat.sublong
+
+	@property
+	def sublat(self):
+		return self.ephem_sat.sublat
+	
+	@property 
+	def elevation(self):
+		return self.ephem_sat.elevation
 
 
 def generate_sat_obj_list(
@@ -119,7 +159,7 @@ def generate_sat_obj_wrapper_list(
 			sat._M = ephem.degrees(mean_anomaly)
 			sat._n = mean_motion
 			
-			sat_wrapper = satellite.Satellite(sat)
+			sat_wrapper = Satellite(sat)
 			
 			sat_objs[counter] = {
 				"sat_obj": sat_wrapper,
@@ -266,7 +306,7 @@ def const_setup(tles_files):
 				
 				name = tles_line_1.strip()
 				cur_ephem_sat = ephem.readtle(tles_line_1, tles_line_2, tles_line_3)
-				cur_sat = satellite.Satellite(cur_ephem_sat)
+				cur_sat = Satellite(cur_ephem_sat)
 
 				satellites.append({
 					'sat_obj':cur_sat, 
@@ -300,7 +340,7 @@ def const_setup_per_sat_config(tles_file, json_file):
 
 				name = tles_line_1.strip()
 				cur_ephem_sat = ephem.readtle(tles_line_1, tles_line_2, tles_line_3)
-				cur_sat = satellite.Satellite(cur_ephem_sat)
+				cur_sat = Satellite(cur_ephem_sat)
 				sat_setup(sat_config[i], cur_sat)
 
 				satellites.append({
@@ -336,7 +376,7 @@ def const_setup_universal_config(tles_file, json_file):
 
 				name = tles_line_1.strip()
 				cur_ephem_sat = ephem.readtle(tles_line_1, tles_line_2, tles_line_3)
-				cur_sat = satellite.Satellite(cur_ephem_sat)
+				cur_sat = Satellite(cur_ephem_sat)
 				sat_setup(sat_config, cur_sat)
 				print(cur_sat.name)
 
@@ -457,12 +497,13 @@ def wrapper_visualize(data, assignment):
 			+ str(math.degrees(data['virtual'][i]["sat_obj"].sublong)) + ", " \
 			+ str(math.degrees(data['virtual'][i]["sat_obj"].sublat)) + ", "\
 			+ str(data['virtual'][i]["sat_obj"].elevation) + "), "\
-			+ "ellipsoid : {radii : new Cesium.Cartesian3(" + str(VIRTUAL_RADIUS) + ", " + str(VIRTUAL_RADIUS) + ", " + str(VIRTUAL_RADIUS) + "), "
+			+ "ellipsoid : {radii : new Cesium.Cartesian3(" + str(SATELLITE_RADIUS) + ", " + str(SATELLITE_RADIUS) + ", " + str(SATELLITE_RADIUS) + "), "
 		
 		# Assign color based on constellation id (cid)
 		color = COLOR_LIST[data['virtual'][i]['cid']]
 		
 		viz_string += "material : Cesium.Color." + color + ".withAlpha(1),}});\n"
+		
 
 	# Determine marker positions for physical satellites
 	num_const = data["num_virtual_const"]
@@ -498,6 +539,64 @@ def wrapper_visualize(data, assignment):
 					+ str(MARKER_RADIUS) + ", " + str(MARKER_RADIUS) + ", " + str(MARKER_RADIUS) + "), "
 				viz_string += "material : Cesium.Color." + color + ".withAlpha(1),}});\n"
 	return viz_string
+
+
+
+def extract_orbit(tle_line2):
+    """
+    Extract orbit information (the inclination and the Right Ascension (RAAN) of the 
+    Ascending Node) for the 2nd line of a TLE entry. 
+
+    Parameters:
+    tle_line2 (str): The 2nd line of a TLE, which contains orbital information.
+
+    Returns:
+    tuple: A tuple containing the extracted orbital elements:
+        - inclination (float): The inclination of the orbit in degrees. 
+        - raan (float): The Right Ascension of the Ascending Node in degrees. 
+    """
+    return float(tle_line2[8:16].strip()), float(tle_line2[17:25].strip())
+
+
+def tle_file_parser(tle_files):
+    """
+    Parses TLE files to extract satellite data.
+
+    This function reads a file containing multiple satellites' Two-Line Element (TLE)
+    sets, where each set consists of a satellite name followed by two lines of orbital 
+    element data. It returns a structured representation of the satellite information.
+
+    Parameters:
+    tle_file (str): The file path of the TLE file to be parsed.
+
+    Returns:
+    list of list: A list where each element corresponds to a satellite.
+    """
+    satellites = []
+    orbits = set()
+
+    for tle_file in tle_files:
+        with open(tle_file, 'r') as f:
+            for title_line in f:
+                title_line = title_line.strip()
+                line_1 = f.readline()
+                line_2 = f.readline()
+                cur_orbit = extract_orbit(line_2)
+                
+                if len(orbits) == 0:
+                    satellites.append([title_line, line_1, line_2])
+                    orbits.add(cur_orbit)
+                elif cur_orbit not in orbits:  # remove overlapping orbits
+                    for orbit in orbits:
+                       if (abs(cur_orbit[0] - orbit[0]) < 1
+                            and abs(cur_orbit[1] - orbit[1]) < 1):
+                            break
+                    else:
+                        satellites.append([title_line, line_1, line_2])
+                        orbits.add(cur_orbit)
+    print('num orbits:', len(satellites))
+                                
+    return satellites
 
 
 def orbit_czml(tle_file):

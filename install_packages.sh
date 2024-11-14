@@ -6,3 +6,5 @@ pip install astropy
 pip install ephem
 pip install geometry
 pip install satellite
+pip install sgp4
+

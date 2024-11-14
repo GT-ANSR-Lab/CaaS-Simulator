@@ -1,7 +1,9 @@
 try:
 	from . import caas_sim_utils
+	from . import satsim_solver
 except (ImportError, SystemError):
-	import caas_sim_utils.py
+	import caas_sim_utils
+	import satsim_solver
 
 topFile = "./html_templates/top.html"
 bottomFile = "./html_templates/bottom.html"

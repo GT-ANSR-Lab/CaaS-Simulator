@@ -3,7 +3,7 @@ from ortools.linear_solver import pywraplp
 try:
 	from . import caas_sim_utils
 except (ImportError, SystemError):
-	import caas_sim_utils.py
+	import caas_sim_utils
 
 RADIUS = 10000000
 
