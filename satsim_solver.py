@@ -1,11 +1,40 @@
 from ortools.linear_solver import pywraplp
 
 try:
-	from . import wrapper_calculation
+	from . import caas_sim_utils
 except (ImportError, SystemError):
-	import wrapper_calculation
+	import caas_sim_utils.py
 
 RADIUS = 10000000
+
+
+
+# Solves the satellite assignment problem by assigning virtual satellites to physical satellites
+# based on a set of constraints and an optimization objective.
+def solve_sat_wrapper(data, virtual_tles, physical_tles):
+	'''
+	Solves the satellite assignment problem by assigning virtual satellites to physical satellites
+	based on a set of constraints and an optimization objective.
+	
+	Args:
+		data (dict): Contains information about the virtual and physical satellites, including their configurations 
+			     and any necessary preprocessed data (like position, constraints, etc.).
+		virtual_tles (list): Two-Line Element (TLE) data for virtual satellites, used to generate their orbits.
+		physical_tles (list): TLE data for physical satellites, used to generate their orbits.
+	
+	Returns:
+		str: A visualization string that shows the assignment results and satellite orbits in CZML format
+		     for use with Cesium.
+	'''
+	solver = pywraplp.Solver.CreateSolver("SCIP")
+	x = solve_sat_wrapper_helper(data, solver) # x[i, j] = 1 if item i is packed in bin j.
+	
+	status = solver.Solve()
+	print_solve_wrapper_res(solver, status, x, data)
+	viz_string = caas_sim_utils.wrapper_visualize(data, x)
+
+	return viz_string + caas_sim_utils.orbit_czml(virtual_tles) + caas_sim_utils.orbit_czml(physical_tles)
+
 
 def solve_sat_wrapper_helper(data_model, solver):
 	"""
@@ -63,7 +92,7 @@ def solve_sat_wrapper_helper(data_model, solver):
 	solver.Maximize(
 		solver.Sum(
 			x[i, j] *
-			wrapper_calculation.eval_preference(data['virtual'][i]['sat_obj'].ephem_sat,
+			caas_sim_utils.eval_preference(data['virtual'][i]['sat_obj'].ephem_sat,
 						   data['physical'][j]['sat_obj'].ephem_sat, RADIUS, data['epoch_str'])
 			for i in data['virtual_list'] for j in data['physical_list']))
 	return x
@@ -94,7 +123,7 @@ def print_solve_wrapper_res(solver, status, assignment, data_model):
 			for i in data["virtual_list"]:
 				if x[i, j].solution_value() > 0:
 					virt_sats.append(i)
-					pref_sum += wrapper_calculation.eval_preference(
+					pref_sum += caas_sim_utils.eval_preference(
 						data['virtual'][i]['sat_obj'].ephem_sat,
 						data['physical'][j]['sat_obj'].ephem_sat, RADIUS, data['epoch_str']
 					)
