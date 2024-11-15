@@ -10,10 +10,10 @@ from ortools.linear_solver import pywraplp
 import random
 import json
 try:
-	from . import satsim_solver
+	# from . import caas_sim_solver
 	from . import satellite_czml
 except (ImportError, SystemError):
-	import satsim_solver
+	# import caas_sim_solver
 	from satellite_czml import satellite_czml
 
 
@@ -167,7 +167,7 @@ def generate_sat_obj_wrapper_list(
 			counter += 1
 	return sat_objs
 
-#FIX README
+
 def write_viz_files(viz_string, top_file, bottom_file, out_file):
 	"""
 	Writes a visualization HTML string to a HTML file by combining content from the top, bottom, and a generated visualization string.
@@ -427,9 +427,9 @@ def generate_100_coordinates_around_europe():
 		coordinates.append(coordinate)
 	return coordinates
 
-#FIX README
-# Create data with tles information about the virtual and physical constellations
+
 def create_data(virtual_tles, physical_tles):
+	# Create data with tles information about the virtual and physical constellations
 	data = {}
 	start_time = datetime.utcnow().replace(tzinfo=pytz.UTC) + timedelta(hours=1)
 	data['epoch_str'] = start_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -443,9 +443,9 @@ def create_data(virtual_tles, physical_tles):
 	return data
 
 
-# Create data with tles information about the virtual and physical constellations, 
-# but uses universal config files for constellation setup
 def create_data_universal(virtual_tles, physical_tles, physical_json_file, virtual_json_files):
+	# Create data with tles information about the virtual and physical constellations, 
+	# but uses universal config files for constellation setup
 	data = {}
 	start_time = datetime.utcnow().replace(tzinfo=pytz.UTC) + timedelta(hours=1)
 	data['epoch_str'] = start_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -458,8 +458,9 @@ def create_data_universal(virtual_tles, physical_tles, physical_json_file, virtu
 
 	return data
 
-# Create data per satellite (with individual config files for each satellite constellation)
+
 def create_data_per_sat(virtual_tles, physical_tles, virtual_json_file, physical_json_file):
+	# Create data per satellite (with individual config files for each satellite constellation)
 	data = {}
 	start_time = datetime.utcnow().replace(tzinfo=pytz.UTC) + timedelta(hours=1)
 	data['epoch_str'] = start_time.strftime("%Y-%m-%d %H:%M:%S")
