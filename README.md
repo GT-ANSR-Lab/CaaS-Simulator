@@ -13,3 +13,5 @@
 6. Visualization result written to sat_wrapper_test_viz.html, to change the file, edit main.py:23 OUT_HTML_FILE.
     1. Visualization string is written into an HTML file in caas_sim_utils.py:170 write_viz_files()
 <img width="1334" alt="Simulator Flow Diagram" src="https://github.com/user-attachments/assets/d96b4859-5142-46e9-99e6-2022c2e17198">
+
+Contact: wlei36@gatech.edu
